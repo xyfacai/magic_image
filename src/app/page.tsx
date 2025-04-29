@@ -345,6 +345,17 @@ export default function Home() {
           setSourceImage(imageUrl)
         }}
       />
+
+      <footer className="w-full py-4 text-center text-sm text-gray-500">
+        <a 
+          href="https://magic666.top" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="hover:text-primary transition-colors"
+        >
+          本产品由 MagicAPI 研发 ，点击进行跳转
+        </a>
+      </footer>
     </main>
   )
 }
