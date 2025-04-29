@@ -31,7 +31,7 @@ export function ApiKeyDialog({ open, onOpenChange }: ApiKeyDialogProps) {
       newErrors.key = "请输入 API Key"
     }
     if (!baseUrl.trim()) {
-      newErrors.baseUrl = "请输入 API 基础地址"
+      newErrors.baseUrl = "请输入API基础地址"
     }
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -55,7 +55,7 @@ export function ApiKeyDialog({ open, onOpenChange }: ApiKeyDialogProps) {
           <div className="space-y-2">
             <div>
               <Input
-                placeholder="请输入 API 基础地址"
+                placeholder="请输入API基础地址，URL请不要以/结尾，默认添加/v1/chat/completions"
                 value={baseUrl}
                 onChange={(e) => {
                   setBaseUrl(e.target.value)
