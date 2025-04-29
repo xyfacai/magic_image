@@ -215,14 +215,6 @@ export default function Home() {
                     value={prompt}
                     onChange={(e) => setPrompt(e.target.value)}
                   />
-                  <div className="flex items-center gap-2">
-                    <Button size="sm" variant="outline" className="text-blue-600">
-                      英文翻译
-                    </Button>
-                    <Button size="sm" variant="outline" className="text-blue-600">
-                      优化提示词
-                    </Button>
-                  </div>
                 </div>
 
                 <div className="space-y-2">
