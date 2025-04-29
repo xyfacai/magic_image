@@ -71,7 +71,7 @@ export const api = {
         const errorMessage = errorData.error?.message || '生成图片失败'
         callbacks.onError(errorMessage)
         toast.error(errorMessage)
-      } catch (e) {
+      } catch {
         callbacks.onError('生成图片失败')
         toast.error('生成图片失败')
       }
