@@ -569,7 +569,7 @@ export default function Home() {
         </DialogContent>
       </Dialog>
 
-      {isMaskEditorOpen && (
+      {isMaskEditorOpen && selectedImage ? (
         <MaskEditor
           imageUrl={selectedImage}
           onMaskChange={(maskDataUrl) => {
@@ -577,9 +577,9 @@ export default function Home() {
             setIsMaskEditorOpen(false)
           }}
           onClose={() => setIsMaskEditorOpen(false)}
-          initialMask={maskImage}
+          initialMask={maskImage || undefined}
         />
-      )}
+      ) : null}
     </main>
   )
 }
