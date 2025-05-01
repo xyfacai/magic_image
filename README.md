@@ -48,8 +48,8 @@
 
 1. 克隆项目
 ```bash
-git clone https://github.com/HappyDongD/image_front.git
-cd image_front
+git clone https://github.com/HappyDongD/magic_image.git
+cd magic_image
 ```
 
 2. 安装依赖
@@ -153,5 +153,14 @@ pnpm dev
 <div align="center">
   <img src="./public/wechat-pay.png" alt="微信收款码" width="300" />
   <p>请我喝杯咖啡</p>
+</div>
+
+## 联系方式
+
+如果您有任何问题或建议，欢迎通过微信联系我：
+
+<div align="center">
+  <img src="./public/wechat-connect.jpg" alt="微信联系方式" width="300" />
+  <p>扫描二维码添加微信</p>
 </div>
 

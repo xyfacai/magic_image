@@ -8,7 +8,7 @@ import { Info, Download, Edit, Settings, History, Image as ImageIcon, MessageSqu
 import Image from "next/image"
 import { ApiKeyDialog } from "@/components/api-key-dialog"
 import { HistoryDialog } from "@/components/history-dialog"
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, Suspense } from "react"
 import { api } from "@/lib/api"
 import { GenerationModel, AspectRatio, ImageSize } from "@/types"
 import { storage } from "@/lib/storage"
@@ -18,6 +18,14 @@ import { MaskEditor } from "@/components/mask-editor"
 import { useSearchParams } from 'next/navigation'
 
 export default function Home() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <HomeContent />
+    </Suspense>
+  )
+}
+
+function HomeContent() {
   const [showApiKeyDialog, setShowApiKeyDialog] = useState(false)
   const [showHistoryDialog, setShowHistoryDialog] = useState(false)
   const [prompt, setPrompt] = useState("")

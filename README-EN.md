@@ -48,8 +48,8 @@ Visit: [https://image-front-eight.vercel.app/](https://image-front-eight.vercel.
 
 1. Clone the project
 ```bash
-git clone https://github.com/HappyDongD/image_front.git
-cd image_front
+git clone https://github.com/HappyDongD/magic_image.git
+cd magic_image
 ```
 
 2. Install dependencies
@@ -153,5 +153,14 @@ If this project has been helpful to you, feel free to buy me a coffee ☕️
 <div align="center">
   <img src="./public/wechat-pay.png" alt="WeChat Pay QR Code" width="300" />
   <p>Buy me a coffee </p>
+</div>
+
+## Contact
+
+If you have any questions or suggestions, feel free to contact me via WeChat:
+
+<div align="center">
+  <img src="./public/wechat-connect.jpg" alt="WeChat Contact" width="300" />
+  <p>Scan QR code to add WeChat</p>
 </div>
 
