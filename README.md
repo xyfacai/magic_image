@@ -1,4 +1,4 @@
-# AI 绘画助手
+# 魔法AI绘画
 
 <div align="right">中文 | <a href="README-EN.md">English</a></div>
 

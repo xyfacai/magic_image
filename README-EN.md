@@ -1,4 +1,4 @@
-# AI Painting Assistant
+# Magic AI Painting
 
 <div align="right"><a href="README.md">中文</a> | English</div>
 

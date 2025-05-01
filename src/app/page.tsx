@@ -261,7 +261,7 @@ function HomeContent() {
 
       {/* 标题区域 */}
       <div className="text-center py-8">
-        <h1 className="text-3xl font-bold">AI 绘画助手</h1>
+        <h1 className="text-3xl font-bold">魔法AI绘画</h1>
         <p className="text-gray-500 mt-2">通过简单的文字描述，创造精美的AI艺术作品</p>
       </div>
 
