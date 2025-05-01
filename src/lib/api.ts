@@ -10,7 +10,7 @@ export interface GenerateImageRequest {
   aspectRatio?: AspectRatio
   size?: ImageSize
   n?: number
-  quality?: 'high' | 'medium' | 'low' | 'hd' | 'standard'
+  quality?: 'high' | 'medium' | 'low' | 'hd' | 'standard'| 'auto'
   mask?: string
 }
 
