@@ -159,7 +159,7 @@ Subject to the following conditions:
 If this project has been helpful to you, feel free to buy me a coffee ☕️
 
 <div align="center">
-  <img src="./public/wechat-pay.png" alt="WeChat Pay QR Code" width="300" />
+  <img src="./public/wechat-pay.jpg" alt="WeChat Pay QR Code" width="300" />
   <p>Buy me a coffee </p>
 </div>
 
