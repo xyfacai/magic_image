@@ -1,6 +1,7 @@
 import { storage } from "./storage"
 import { GenerationModel, AspectRatio, ImageSize } from "@/types"
 import { toast } from "sonner"
+import { AlertCircle } from "lucide-react"
 
 export interface GenerateImageRequest {
   prompt: string
@@ -27,16 +28,23 @@ export interface DalleImageResponse {
   created: number
 }
 
+const showErrorToast = (message: string) => {
+  toast.error(message, {
+    style: { color: '#EF4444' },  // text-red-500
+    duration: 5000
+  })
+}
+
 export const api = {
   generateDalleImage: async (request: GenerateImageRequest): Promise<DalleImageResponse> => {
     const config = storage.getApiConfig()
     if (!config) {
-      toast.error("请先设置 API 配置")
+      showErrorToast("请先设置 API 配置")
       throw new Error('请先设置 API 配置')
     }
 
     if (!config.key || !config.baseUrl) {
-      toast.error("API 配置不完整，请检查 API Key 和基础地址")
+      showErrorToast("API 配置不完整，请检查 API Key 和基础地址")
       throw new Error('API 配置不完整')
     }
 
@@ -56,15 +64,12 @@ export const api = {
     })
 
     if (!response.ok) {
-      try {
-        const errorData = await response.json()
-        const errorMessage = errorData.error?.message || '生成图片失败'
-        toast.error(errorMessage)
-        throw new Error(errorMessage)
-      } catch {
-        toast.error('生成图片失败')
-        throw new Error('生成图片失败')
-      }
+      const errorData = await response.json()
+      const errorMessage = errorData.message || errorData.error?.message || '生成图片失败'
+      const errorCode = errorData.code || errorData.error?.code
+      const fullError = `${errorMessage}${errorCode ? `\n错误代码: ${errorCode}` : ''}`
+      showErrorToast(fullError)
+      throw new Error(fullError)
     }
 
     return response.json()
@@ -73,17 +78,17 @@ export const api = {
   editDalleImage: async (request: GenerateImageRequest): Promise<DalleImageResponse> => {
     const config = storage.getApiConfig()
     if (!config) {
-      toast.error("请先设置 API 配置")
+      showErrorToast("请先设置 API 配置")
       throw new Error('请先设置 API 配置')
     }
 
     if (!config.key || !config.baseUrl) {
-      toast.error("API 配置不完整，请检查 API Key 和基础地址")
+      showErrorToast("API 配置不完整，请检查 API Key 和基础地址")
       throw new Error('API 配置不完整')
     }
 
     if (!request.sourceImage) {
-      toast.error("请先上传图片")
+      showErrorToast("请先上传图片")
       throw new Error('请先上传图片')
     }
 
@@ -126,32 +131,39 @@ export const api = {
 
       if (!response.ok) {
         const errorData = await response.json()
-        const errorMessage = errorData.error?.message || '编辑图片失败'
-        toast.error(errorMessage)
-        throw new Error(errorMessage)
+        const errorMessage = errorData.message || errorData.error?.message || '编辑图片失败'
+        const errorCode = errorData.code || errorData.error?.code
+        const fullError = `${errorMessage}${errorCode ? `\n错误代码: ${errorCode}` : ''}`
+        showErrorToast(fullError)
+        throw new Error(fullError)
       }
 
       return response.json()
     } catch (error) {
       if (error instanceof Error) {
-        toast.error(error.message)
+        showErrorToast(error.message)
         throw error
       }
-      toast.error('编辑图片失败')
-      throw new Error('编辑图片失败')
+      const errorMessage = '编辑图片失败'
+      showErrorToast(errorMessage)
+      throw new Error(errorMessage)
     }
   },
 
   generateStreamImage: async (request: GenerateImageRequest, callbacks: StreamCallback) => {
     const config = storage.getApiConfig()
     if (!config) {
-      toast.error("请先设置 API 配置")
-      throw new Error('请先设置 API 配置')
+      const error = '请先设置 API 配置'
+      showErrorToast(error)
+      callbacks.onError(error)
+      return
     }
 
     if (!config.key || !config.baseUrl) {
-      toast.error("API 配置不完整，请检查 API Key 和基础地址")
-      throw new Error('API 配置不完整')
+      const error = 'API 配置不完整，请检查 API Key 和基础地址'
+      showErrorToast(error)
+      callbacks.onError(error)
+      return
     }
 
     const messages = request.isImageToImage ? [
@@ -193,12 +205,15 @@ export const api = {
     if (!response.ok) {
       try {
         const errorData = await response.json()
-        const errorMessage = errorData.error?.message || '生成图片失败'
-        callbacks.onError(errorMessage)
-        toast.error(errorMessage)
+        const errorMessage = errorData.message || errorData.error?.message || '生成图片失败'
+        const errorCode = errorData.code || errorData.error?.code
+        const fullError = `${errorMessage}${errorCode ? `\n错误代码: ${errorCode}` : ''}`
+        callbacks.onError(fullError)
+        showErrorToast(fullError)
       } catch {
-        callbacks.onError('生成图片失败')
-        toast.error('生成图片失败')
+        const error = '生成图片失败'
+        callbacks.onError(error)
+        showErrorToast(error)
       }
       return
     }

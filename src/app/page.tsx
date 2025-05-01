@@ -89,7 +89,6 @@ export default function Home() {
 
     try {
       const isDalleModel = model === 'dall-e-3' || model === 'gpt-image-1'
-      // 对于 DALL-E 模型，不添加图片比例到提示词中
       const finalPrompt = isDalleModel ? prompt.trim() : `${prompt.trim()}\n图片生成比例为：${aspectRatio}`
       
       if (isDalleModel) {
@@ -98,50 +97,66 @@ export default function Home() {
             throw new Error('请先上传图片')
           }
           
-          const response = await api.editDalleImage({
-            prompt: finalPrompt,
-            model,
-            sourceImage,
-            size,
-            n,
-            mask: maskImage || undefined,
-            quality
-          })
-          
-          const imageUrls = response.data.map(item => item.url)
-          setGeneratedImages(imageUrls)
-          
-          if (imageUrls.length > 0) {
-            storage.addToHistory({
-              id: uuidv4(),
+          try {
+            const response = await api.editDalleImage({
               prompt: finalPrompt,
-              url: imageUrls[0],
               model,
-              createdAt: new Date().toISOString(),
-              aspectRatio: '1:1'
+              sourceImage,
+              size,
+              n,
+              mask: maskImage || undefined,
+              quality
             })
+            
+            const imageUrls = response.data.map(item => item.url)
+            setGeneratedImages(imageUrls)
+            
+            if (imageUrls.length > 0) {
+              storage.addToHistory({
+                id: uuidv4(),
+                prompt: finalPrompt,
+                url: imageUrls[0],
+                model,
+                createdAt: new Date().toISOString(),
+                aspectRatio: '1:1'
+              })
+            }
+          } catch (err) {
+            if (err instanceof Error) {
+              setError(err.message)
+            } else {
+              setError('生成图片失败，请重试')
+            }
           }
         } else {
-          const response = await api.generateDalleImage({
-            prompt: finalPrompt,
-            model,
-            size,
-            n,
-            quality
-          })
-          
-          const imageUrls = response.data.map(item => item.url)
-          setGeneratedImages(imageUrls)
-          
-          if (imageUrls.length > 0) {
-            storage.addToHistory({
-              id: uuidv4(),
+          try {
+            const response = await api.generateDalleImage({
               prompt: finalPrompt,
-              url: imageUrls[0],
               model,
-              createdAt: new Date().toISOString(),
-              aspectRatio: '1:1'
+              size,
+              n,
+              quality
             })
+            
+            const imageUrls = response.data.map(item => item.url)
+            setGeneratedImages(imageUrls)
+            
+            if (imageUrls.length > 0) {
+              storage.addToHistory({
+                id: uuidv4(),
+                prompt: finalPrompt,
+                url: imageUrls[0],
+                model,
+                createdAt: new Date().toISOString(),
+                aspectRatio: '1:1'
+              })
+            }
+          } catch (err) {
+            if (err instanceof Error) {
+              setError(err.message)
+            } else {
+              setError('生成图片失败，请重试')
+            }
           }
         }
       } else {
@@ -172,7 +187,13 @@ export default function Home() {
               })
             },
             onError: (error) => {
-              setError(error)
+              // 处理流式 API 错误
+              if (typeof error === 'object' && error !== null) {
+                const apiError = error as any
+                setError(`图片生成失败: ${apiError.message || '未知错误'}\n${apiError.code ? `错误代码: ${apiError.code}` : ''}`)
+              } else {
+                setError(error.toString())
+              }
             }
           }
         )
@@ -493,7 +514,7 @@ export default function Home() {
             </CardHeader>
             <CardContent className="flex flex-col items-stretch justify-start p-6 h-full">
               {error ? (
-                <div className="text-center text-red-500">
+                <div className="text-center text-red-500 whitespace-pre-line">
                   <p>{error}</p>
                 </div>
               ) : (
