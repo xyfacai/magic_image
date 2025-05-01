@@ -124,8 +124,13 @@ pnpm dev
 MIT License
 
 ---
+
+## 请我喝杯咖啡
+
+如果这个项目对你有帮助，欢迎请我喝杯咖啡 ☕️
+
 <div align="center">
-  <a href="https://github.com/HappyDongD/image_front" target="_blank" rel="noopener noreferrer">
-    访问 GitHub 项目主页
-  </a>
+  <img src="./public/wechat-pay.png" alt="微信收款码" width="300" />
+  <p>请我喝杯咖啡</p>
 </div>
+

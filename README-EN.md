@@ -124,8 +124,13 @@ Welcome to submit Issues and Pull Requests to help improve the project.
 MIT License 
 
 ---
+
+## Buy Me a Coffee
+
+If this project has been helpful to you, feel free to buy me a coffee ☕️
+
 <div align="center">
-  <a href="https://github.com/HappyDongD/image_front" target="_blank" rel="noopener noreferrer">
-    Visit GitHub Project Page
-  </a>
-</div> 
+  <img src="./public/wechat-pay.png" alt="WeChat Pay QR Code" width="300" />
+  <p>Buy me a coffee </p>
+</div>
+
