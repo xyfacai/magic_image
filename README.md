@@ -88,6 +88,15 @@ pnpm dev
    - 点击右上角的"密钥设置"
    - 输入 API 密钥和基础地址
    - 点击保存
+   - 也可以通过 URL 参数快速配置：
+     ```
+     http://localhost:3000?url=你的API地址&apikey=你的API密钥
+     ```
+     例如：
+     ```
+     http://localhost:3000?url=https%3A%2F%2Fapi.example.com&apikey=sk-xxx
+     ```
+     注意：URL 中的特殊字符需要进行 URL 编码
 
 2. 选择生成模式
    - 文生图：通过文字描述生成图片

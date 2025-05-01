@@ -88,6 +88,15 @@ pnpm dev
    - Click "API Settings" in the top right corner
    - Enter API key and base URL
    - Click Save
+   - You can also quickly configure via URL parameters:
+     ```
+     http://localhost:3000?url=your-api-url&apikey=your-api-key
+     ```
+     Example:
+     ```
+     http://localhost:3000?url=https%3A%2F%2Fapi.example.com&apikey=sk-xxx
+     ```
+     Note: Special characters in the URL need to be URL encoded
 
 2. Select generation mode
    - Text-to-Image: Generate images from text descriptions

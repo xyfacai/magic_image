@@ -8,13 +8,14 @@ import { Info, Download, Edit, Settings, History, Image as ImageIcon, MessageSqu
 import Image from "next/image"
 import { ApiKeyDialog } from "@/components/api-key-dialog"
 import { HistoryDialog } from "@/components/history-dialog"
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { api } from "@/lib/api"
 import { GenerationModel, AspectRatio, ImageSize } from "@/types"
 import { storage } from "@/lib/storage"
 import { v4 as uuidv4 } from 'uuid'
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { MaskEditor } from "@/components/mask-editor"
+import { useSearchParams } from 'next/navigation'
 
 export default function Home() {
   const [showApiKeyDialog, setShowApiKeyDialog] = useState(false)
@@ -39,6 +40,19 @@ export default function Home() {
   const [maskImage, setMaskImage] = useState<string | null>(null)
   const [isMaskEditorOpen, setIsMaskEditorOpen] = useState(false)
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
+  const searchParams = useSearchParams()
+
+  useEffect(() => {
+    const url = searchParams.get('url')
+    const apiKey = searchParams.get('apikey')
+    
+    if (url && apiKey) {
+      // 解码 URL 参数
+      const decodedUrl = decodeURIComponent(url)
+      const decodedApiKey = decodeURIComponent(apiKey)
+      storage.setApiConfig(decodedApiKey, decodedUrl)
+    }
+  }, [searchParams])
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
