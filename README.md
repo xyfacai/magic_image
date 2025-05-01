@@ -13,6 +13,14 @@
 
 访问地址：[https://image-front-eight.vercel.app/](https://image-front-eight.vercel.app/)
 
+### 应用截图
+
+<div align="center">
+  <img src="./public/0.png" alt="应用截图1" width="800" style="margin-bottom: 20px"/>
+  <img src="./public/1.png" alt="应用截图2" width="800" style="margin-bottom: 20px"/>
+  <img src="./public/2.png" alt="应用截图3" width="800" style="margin-bottom: 20px"/>
+</div>
+
 ## 功能特点
 
 - 🎨 支持多种 AI 模型

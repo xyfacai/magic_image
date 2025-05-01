@@ -13,6 +13,14 @@ An AI painting application developed based on Next.js, supporting multiple AI mo
 
 Visit: [https://image-front-eight.vercel.app/](https://image-front-eight.vercel.app/)
 
+### Application Screenshots
+
+<div align="center">
+  <img src="./public/0.png" alt="Application Screenshot 1" width="800" style="margin-bottom: 20px"/>
+  <img src="./public/1.png" alt="Application Screenshot 2" width="800" style="margin-bottom: 20px"/>
+  <img src="./public/2.png" alt="Application Screenshot 3" width="800" style="margin-bottom: 20px"/>
+</div>
+
 ## Features
 
 - 🎨 Multiple AI Models Support
