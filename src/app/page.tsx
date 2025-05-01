@@ -253,7 +253,7 @@ function HomeContent() {
           variant="ghost"
           size="sm"
           className="absolute right-4 top-1/2 -translate-y-1/2 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full p-2"
-          onClick={() => window.open('https://github.com/HappyDongD', '_blank')}
+          onClick={() => window.open('https://github.com/HappyDongD/magic_image', '_blank')}
         >
           <Github className="h-5 w-5" />
         </Button>
@@ -598,7 +598,7 @@ function HomeContent() {
 
       <footer className="w-full py-4 text-center text-sm text-gray-500">
         <a 
-          href="https://github.com/HappyDongD/image_front" 
+          href="https://github.com/HappyDongD/magic_image" 
           target="_blank" 
           rel="noopener noreferrer"
           className="hover:text-primary transition-colors inline-flex items-center gap-2"
