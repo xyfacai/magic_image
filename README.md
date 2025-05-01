@@ -2,7 +2,7 @@
 
 <div align="right">中文 | <a href="README-EN.md">English</a></div>
 
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](https://opensource.org/licenses/MIT)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Next.js](https://img.shields.io/badge/Next.js-14-black.svg)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue.svg)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-3.0-38B2AC.svg)](https://tailwindcss.com/)
@@ -130,7 +130,19 @@ pnpm dev
 
 ## 许可证
 
-MIT License
+本项目采用 [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) 许可证。
+
+根据许可证，您可以：
+- ✅ 商业用途：可以将软件用于商业用途
+- ✅ 修改：可以修改软件源代码
+- ✅ 分发：可以分发软件
+- ✅ 私人使用：可以私人使用软件
+- ✅ 专利授权：本许可证还提供了专利授权
+
+但必须遵守以下条件：
+- 📝 许可和版权声明：您必须包含原始的许可证和版权声明
+- 📝 声明更改：您必须声明对原始代码的重大更改
+- 📝 商标声明：不得使用贡献者的商标
 
 ---
 

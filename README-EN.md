@@ -2,7 +2,7 @@
 
 <div align="right"><a href="README.md">中文</a> | English</div>
 
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](https://opensource.org/licenses/MIT)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Next.js](https://img.shields.io/badge/Next.js-14-black.svg)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue.svg)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-3.0-38B2AC.svg)](https://tailwindcss.com/)
@@ -130,7 +130,19 @@ Welcome to submit Issues and Pull Requests to help improve the project.
 
 ## License
 
-MIT License 
+This project is licensed under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0).
+
+Under this license, you can:
+- ✅ Commercial Use: Use the software for commercial purposes
+- ✅ Modification: Modify the software source code
+- ✅ Distribution: Distribute the software
+- ✅ Private Use: Use the software privately
+- ✅ Patent Use: This license provides an express grant of patent rights
+
+Subject to the following conditions:
+- 📝 License and Copyright Notice: Include the original license and copyright notice
+- 📝 State Changes: State significant changes made to the code
+- 📝 Trademark Notice: Do not use contributors' trademarks
 
 ---
 
