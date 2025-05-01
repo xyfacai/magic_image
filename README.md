@@ -16,6 +16,7 @@
 ### 应用截图
 
 <div align="center">
+  <img src="./public/4.png" alt="应用截图4" width="800" style="margin-bottom: 20px"/>
   <img src="./public/0.png" alt="应用截图1" width="800" style="margin-bottom: 20px"/>
   <img src="./public/1.png" alt="应用截图2" width="800" style="margin-bottom: 20px"/>
   <img src="./public/2.png" alt="应用截图3" width="800" style="margin-bottom: 20px"/>

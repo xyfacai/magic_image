@@ -16,6 +16,7 @@ Visit: [https://image-front-eight.vercel.app/](https://image-front-eight.vercel.
 ### Application Screenshots
 
 <div align="center">
+  <img src="./public/4.png" alt="应用截图4" width="800" style="margin-bottom: 20px"/>
   <img src="./public/0.png" alt="Application Screenshot 1" width="800" style="margin-bottom: 20px"/>
   <img src="./public/1.png" alt="Application Screenshot 2" width="800" style="margin-bottom: 20px"/>
   <img src="./public/2.png" alt="Application Screenshot 3" width="800" style="margin-bottom: 20px"/>
