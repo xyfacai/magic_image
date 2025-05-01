@@ -4,15 +4,17 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Info, Download, Edit, Settings, History, Image as ImageIcon, MessageSquare, Upload } from "lucide-react"
+import { Info, Download, Edit, Settings, History, Image as ImageIcon, MessageSquare, Upload, ChevronLeft, ChevronRight, Maximize2 } from "lucide-react"
 import Image from "next/image"
 import { ApiKeyDialog } from "@/components/api-key-dialog"
 import { HistoryDialog } from "@/components/history-dialog"
 import { useState, useRef } from "react"
 import { api } from "@/lib/api"
-import { GenerationModel, AspectRatio } from "@/types"
+import { GenerationModel, AspectRatio, ImageSize } from "@/types"
 import { storage } from "@/lib/storage"
 import { v4 as uuidv4 } from 'uuid'
+import { Dialog, DialogContent } from "@/components/ui/dialog"
+import { MaskEditor } from "@/components/mask-editor"
 
 export default function Home() {
   const [showApiKeyDialog, setShowApiKeyDialog] = useState(false)
@@ -20,14 +22,23 @@ export default function Home() {
   const [prompt, setPrompt] = useState("")
   const [model, setModel] = useState<GenerationModel>("sora_image")
   const [isGenerating, setIsGenerating] = useState(false)
-  const [generatedImage, setGeneratedImage] = useState<string | null>(null)
+  const [generatedImages, setGeneratedImages] = useState<string[]>([])
+  const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const [showImageDialog, setShowImageDialog] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [streamContent, setStreamContent] = useState<string>("")
   const [isImageToImage, setIsImageToImage] = useState(false)
   const [sourceImage, setSourceImage] = useState<string | null>(null)
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>("1:1")
+  const [size, setSize] = useState<ImageSize>("1024x1024")
+  const [n, setN] = useState(1)
+  const [quality, setQuality] = useState<'auto' | 'high' | 'medium' | 'low' | 'hd' | 'standard'>('auto')
   const contentRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [showMaskEditor, setShowMaskEditor] = useState(false)
+  const [maskImage, setMaskImage] = useState<string | null>(null)
+  const [isMaskEditorOpen, setIsMaskEditorOpen] = useState(false)
+  const [selectedImage, setSelectedImage] = useState<string | null>(null)
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -58,42 +69,100 @@ export default function Home() {
 
     setError(null)
     setIsGenerating(true)
-    setGeneratedImage(null)
+    setGeneratedImages([])
     setStreamContent("")
+    setCurrentImageIndex(0)
 
     try {
-      const finalPrompt = `${prompt.trim()}\n图片生成比例为：${aspectRatio}`
-      await api.generateImage(
-        {
-          prompt: finalPrompt,
-          model,
-          sourceImage: isImageToImage && sourceImage ? sourceImage : undefined,
-          isImageToImage,
-          aspectRatio
-        },
-        {
-          onMessage: (content) => {
-            setStreamContent(prev => prev + content)
-            if (contentRef.current) {
-              contentRef.current.scrollTop = contentRef.current.scrollHeight
-            }
-          },
-          onComplete: (imageUrl) => {
-            setGeneratedImage(imageUrl)
+      const isDalleModel = model === 'dall-e-3' || model === 'gpt-image-1'
+      // 对于 DALL-E 模型，不添加图片比例到提示词中
+      const finalPrompt = isDalleModel ? prompt.trim() : `${prompt.trim()}\n图片生成比例为：${aspectRatio}`
+      
+      if (isDalleModel) {
+        if (isImageToImage) {
+          if (!sourceImage) {
+            throw new Error('请先上传图片')
+          }
+          
+          const response = await api.editDalleImage({
+            prompt: finalPrompt,
+            model,
+            sourceImage,
+            size,
+            n,
+            mask: maskImage || undefined,
+            quality
+          })
+          
+          const imageUrls = response.data.map(item => item.url)
+          setGeneratedImages(imageUrls)
+          
+          if (imageUrls.length > 0) {
             storage.addToHistory({
               id: uuidv4(),
               prompt: finalPrompt,
-              url: imageUrl,
+              url: imageUrls[0],
               model,
               createdAt: new Date().toISOString(),
-              aspectRatio
+              aspectRatio: '1:1'
             })
-          },
-          onError: (error) => {
-            setError(error)
+          }
+        } else {
+          const response = await api.generateDalleImage({
+            prompt: finalPrompt,
+            model,
+            size,
+            n,
+            quality
+          })
+          
+          const imageUrls = response.data.map(item => item.url)
+          setGeneratedImages(imageUrls)
+          
+          if (imageUrls.length > 0) {
+            storage.addToHistory({
+              id: uuidv4(),
+              prompt: finalPrompt,
+              url: imageUrls[0],
+              model,
+              createdAt: new Date().toISOString(),
+              aspectRatio: '1:1'
+            })
           }
         }
-      )
+      } else {
+        await api.generateStreamImage(
+          {
+            prompt: finalPrompt,
+            model,
+            sourceImage: isImageToImage && sourceImage ? sourceImage : undefined,
+            isImageToImage,
+            aspectRatio
+          },
+          {
+            onMessage: (content) => {
+              setStreamContent(prev => prev + content)
+              if (contentRef.current) {
+                contentRef.current.scrollTop = contentRef.current.scrollHeight
+              }
+            },
+            onComplete: (imageUrl) => {
+              setGeneratedImages([imageUrl])
+              storage.addToHistory({
+                id: uuidv4(),
+                prompt: finalPrompt,
+                url: imageUrl,
+                model,
+                createdAt: new Date().toISOString(),
+                aspectRatio
+              })
+            },
+            onError: (error) => {
+              setError(error)
+            }
+          }
+        )
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "生成失败，请重试")
     } finally {
@@ -103,11 +172,30 @@ export default function Home() {
 
   const handleReset = () => {
     setPrompt("")
-    setGeneratedImage(null)
+    setGeneratedImages([])
     setError(null)
     setStreamContent("")
     setSourceImage(null)
+    setMaskImage(null)
     setAspectRatio("1:1")
+    setSize("1024x1024")
+    setN(1)
+    setCurrentImageIndex(0)
+  }
+
+  const handlePrevImage = () => {
+    setCurrentImageIndex(prev => (prev - 1 + generatedImages.length) % generatedImages.length)
+  }
+
+  const handleNextImage = () => {
+    setCurrentImageIndex(prev => (prev + 1) % generatedImages.length)
+  }
+
+  const handleEditCurrentImage = () => {
+    if (generatedImages[currentImageIndex]) {
+      setIsImageToImage(true)
+      setSourceImage(generatedImages[currentImageIndex])
+    }
   }
 
   return (
@@ -207,6 +295,19 @@ export default function Home() {
                   </div>
                 )}
 
+                {isImageToImage && sourceImage && (model === 'dall-e-3' || model === 'gpt-image-1') && (
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => {
+                      setIsMaskEditorOpen(true)
+                      setSelectedImage(sourceImage)
+                    }}
+                  >
+                    {maskImage ? "重新编辑区域" : "编辑图片区域"}
+                  </Button>
+                )}
+
                 <div className="space-y-2">
                   <h3 className="font-medium">提示词</h3>
                   <Textarea 
@@ -226,24 +327,92 @@ export default function Home() {
                     <SelectContent>
                       <SelectItem value="sora_image">GPT Sora_Image 模型</SelectItem>
                       <SelectItem value="gpt_4o_image">GPT 4o_Image 模型</SelectItem>
+                      <SelectItem value="gpt-image-1">GPT Image 1 模型</SelectItem>
+                      <SelectItem value="dall-e-3">DALL-E 3 模型</SelectItem>
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-gray-500">选择不同的AI模型可能会产生不同风格的图像结果</p>
                 </div>
 
-                <div className="space-y-2">
-                  <h3 className="font-medium">图片比例</h3>
-                  <Select value={aspectRatio} onValueChange={(value: AspectRatio) => setAspectRatio(value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="选择图片比例" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1:1">1:1 方形</SelectItem>
-                      <SelectItem value="16:9">16:9 宽屏</SelectItem>
-                      <SelectItem value="9:16">9:16 竖屏</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                {(model === 'dall-e-3' || model === 'gpt-image-1') && (
+                  <>
+                    <div className="space-y-2">
+                      <h3 className="font-medium">图片尺寸</h3>
+                      <Select value={size} onValueChange={(value: ImageSize) => setSize(value)}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="选择图片尺寸" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1024x1024">1024x1024 方形</SelectItem>
+                          <SelectItem value="1536x1024">1536x1024 横向</SelectItem>
+                          <SelectItem value="1024x1536">1024x1536 纵向</SelectItem>
+                          <SelectItem value="1792x1024">1792x1024 宽屏</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <h3 className="font-medium">生成数量</h3>
+                      <Select value={n.toString()} onValueChange={(value) => setN(parseInt(value))}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="选择生成数量" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1">1张</SelectItem>
+                          <SelectItem value="2">2张</SelectItem>
+                          <SelectItem value="3">3张</SelectItem>
+                          <SelectItem value="4">4张</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {isImageToImage && (
+                      <div className="space-y-2">
+                        <h3 className="font-medium">图片质量</h3>
+                        <Select 
+                          value={quality} 
+                          onValueChange={(value: 'auto' | 'high' | 'medium' | 'low' | 'hd' | 'standard') => setQuality(value)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="选择图片质量" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {model === 'dall-e-3' ? (
+                              <>
+                                <SelectItem value="hd">HD 高质量</SelectItem>
+                                <SelectItem value="standard">标准质量</SelectItem>
+                                <SelectItem value="auto">自动选择</SelectItem>
+                              </>
+                            ) : model === 'gpt-image-1' ? (
+                              <>
+                                <SelectItem value="high">高质量</SelectItem>
+                                <SelectItem value="medium">中等质量</SelectItem>
+                                <SelectItem value="low">低质量</SelectItem>
+                                <SelectItem value="auto">自动选择</SelectItem>
+                              </>
+                            ) : null}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {!(model === 'dall-e-3' || model === 'gpt-image-1') && (
+                  <div className="space-y-2">
+                    <h3 className="font-medium">图片比例</h3>
+                    <Select value={aspectRatio} onValueChange={(value: AspectRatio) => setAspectRatio(value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="选择图片比例" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1:1">1:1 方形</SelectItem>
+                        <SelectItem value="16:9">16:9 宽屏</SelectItem>
+                        <SelectItem value="9:16">9:16 竖屏</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
 
                 <Button 
                   className="w-full" 
@@ -268,9 +437,22 @@ export default function Home() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-semibold">生成结果</h2>
-                {generatedImage && (
+                {generatedImages.length > 0 && (
                   <div className="flex items-center gap-2">
-                    <Button size="icon" variant="ghost">
+                    <Button 
+                      size="icon" 
+                      variant="ghost"
+                      onClick={() => {
+                        if (generatedImages[currentImageIndex]) {
+                          const link = document.createElement('a')
+                          link.href = generatedImages[currentImageIndex]
+                          link.download = 'generated-image.png'
+                          document.body.appendChild(link)
+                          link.click()
+                          document.body.removeChild(link)
+                        }
+                      }}
+                    >
                       <Download className="h-5 w-5" />
                     </Button>
                     <Button 
@@ -278,7 +460,7 @@ export default function Home() {
                       variant="ghost"
                       onClick={() => {
                         setIsImageToImage(true)
-                        setSourceImage(generatedImage)
+                        setSourceImage(generatedImages[currentImageIndex])
                       }}
                     >
                       <Edit className="h-5 w-5" />
@@ -294,24 +476,53 @@ export default function Home() {
                 </div>
               ) : (
                 <div className="w-full h-full flex flex-col gap-4">
-                  <div 
-                    ref={contentRef}
-                    className="flex-1 overflow-y-auto whitespace-pre-wrap rounded-lg bg-gray-50 p-4 font-mono text-sm min-h-[200px]"
-                  >
-                    {streamContent || (
-                      <div className="text-gray-400 text-center">
-                        {isGenerating ? "正在生成中..." : "等待生成..."}
-                      </div>
-                    )}
-                  </div>
-                  {generatedImage && (
+                  {(model === 'dall-e-3' || model === 'gpt-image-1') ? (
+                    <div className="text-center text-gray-400">
+                      {isGenerating ? "正在生成中..." : generatedImages.length === 0 ? "等待生成..." : null}
+                    </div>
+                  ) : (
+                    <div 
+                      ref={contentRef}
+                      className="flex-1 overflow-y-auto whitespace-pre-wrap rounded-lg bg-gray-50 p-4 font-mono text-sm min-h-[200px]"
+                    >
+                      {streamContent || (
+                        <div className="text-gray-400 text-center">
+                          {isGenerating ? "正在生成中..." : "等待生成..."}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {generatedImages.length > 0 && (
                     <div className="relative w-full aspect-square max-w-2xl mx-auto">
                       <Image
-                        src={generatedImage}
+                        src={generatedImages[currentImageIndex]}
                         alt={prompt}
                         fill
                         className="object-contain rounded-lg"
                       />
+                      {generatedImages.length > 1 && (
+                        <>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/50 hover:bg-white/80"
+                            onClick={handlePrevImage}
+                          >
+                            <ChevronLeft className="h-6 w-6" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/50 hover:bg-white/80"
+                            onClick={handleNextImage}
+                          >
+                            <ChevronRight className="h-6 w-6" />
+                          </Button>
+                          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-white/50 px-2 py-1 rounded-full text-sm">
+                            {currentImageIndex + 1} / {generatedImages.length}
+                          </div>
+                        </>
+                      )}
                     </div>
                   )}
                 </div>
@@ -344,6 +555,31 @@ export default function Home() {
           本产品由 MagicAPI 研发 ，点击进行跳转
         </a>
       </footer>
+
+      <Dialog open={showImageDialog} onOpenChange={setShowImageDialog}>
+        <DialogContent className="max-w-4xl">
+          <div className="relative w-full aspect-square">
+            <Image
+              src={generatedImages[currentImageIndex]}
+              alt={prompt}
+              fill
+              className="object-contain rounded-lg"
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {isMaskEditorOpen && (
+        <MaskEditor
+          imageUrl={selectedImage}
+          onMaskChange={(maskDataUrl) => {
+            setMaskImage(maskDataUrl)
+            setIsMaskEditorOpen(false)
+          }}
+          onClose={() => setIsMaskEditorOpen(false)}
+          initialMask={maskImage}
+        />
+      )}
     </main>
   )
 }

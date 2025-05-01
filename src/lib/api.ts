@@ -1,5 +1,5 @@
 import { storage } from "./storage"
-import { GenerationModel, AspectRatio } from "@/types"
+import { GenerationModel, AspectRatio, ImageSize } from "@/types"
 import { toast } from "sonner"
 
 export interface GenerateImageRequest {
@@ -8,6 +8,10 @@ export interface GenerateImageRequest {
   sourceImage?: string
   isImageToImage?: boolean
   aspectRatio?: AspectRatio
+  size?: ImageSize
+  n?: number
+  quality?: 'high' | 'medium' | 'low' | 'hd' | 'standard'
+  mask?: string
 }
 
 export interface StreamCallback {
@@ -16,8 +20,129 @@ export interface StreamCallback {
   onError: (error: string) => void
 }
 
+export interface DalleImageResponse {
+  data: Array<{
+    url: string
+  }>
+  created: number
+}
+
 export const api = {
-  generateImage: async (request: GenerateImageRequest, callbacks: StreamCallback) => {
+  generateDalleImage: async (request: GenerateImageRequest): Promise<DalleImageResponse> => {
+    const config = storage.getApiConfig()
+    if (!config) {
+      toast.error("请先设置 API 配置")
+      throw new Error('请先设置 API 配置')
+    }
+
+    if (!config.key || !config.baseUrl) {
+      toast.error("API 配置不完整，请检查 API Key 和基础地址")
+      throw new Error('API 配置不完整')
+    }
+
+    const response = await fetch(`${config.baseUrl}/v1/images/generations`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${config.key}`
+      },
+      body: JSON.stringify({
+        model: request.model,
+        prompt: request.prompt,
+        size: request.size || 'auto',
+        n: request.n || 1,
+        quality: request.quality
+      })
+    })
+
+    if (!response.ok) {
+      try {
+        const errorData = await response.json()
+        const errorMessage = errorData.error?.message || '生成图片失败'
+        toast.error(errorMessage)
+        throw new Error(errorMessage)
+      } catch {
+        toast.error('生成图片失败')
+        throw new Error('生成图片失败')
+      }
+    }
+
+    return response.json()
+  },
+
+  editDalleImage: async (request: GenerateImageRequest): Promise<DalleImageResponse> => {
+    const config = storage.getApiConfig()
+    if (!config) {
+      toast.error("请先设置 API 配置")
+      throw new Error('请先设置 API 配置')
+    }
+
+    if (!config.key || !config.baseUrl) {
+      toast.error("API 配置不完整，请检查 API Key 和基础地址")
+      throw new Error('API 配置不完整')
+    }
+
+    if (!request.sourceImage) {
+      toast.error("请先上传图片")
+      throw new Error('请先上传图片')
+    }
+
+    try {
+      // 创建 FormData
+      const formData = new FormData()
+      formData.append('prompt', request.prompt)
+      console.log(request.sourceImage)
+      // 处理源图片
+      const sourceImageResponse = await fetch(request.sourceImage)
+      if (!sourceImageResponse.ok) {
+        throw new Error('获取源图片失败')
+      }
+      const sourceImageBlob = await sourceImageResponse.blob()
+      formData.append('image', sourceImageBlob, 'image.png')
+      
+      // 处理遮罩图片
+      if (request.mask) {
+        console.log(request.mask)
+        const maskResponse = await fetch(request.mask)
+        if (!maskResponse.ok) {
+          throw new Error('获取遮罩图片失败')
+        }
+        const maskBlob = await maskResponse.blob()
+        formData.append('mask', maskBlob, 'mask.png')
+      }
+
+      formData.append('model', request.model)
+      if (request.size) formData.append('size', request.size)
+      if (request.n) formData.append('n', request.n.toString())
+      if (request.quality) formData.append('quality', request.quality)
+
+      const response = await fetch(`${config.baseUrl}/v1/images/edits`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${config.key}`
+        },
+        body: formData
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        const errorMessage = errorData.error?.message || '编辑图片失败'
+        toast.error(errorMessage)
+        throw new Error(errorMessage)
+      }
+
+      return response.json()
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error.message)
+        throw error
+      }
+      toast.error('编辑图片失败')
+      throw new Error('编辑图片失败')
+    }
+  },
+
+  generateStreamImage: async (request: GenerateImageRequest, callbacks: StreamCallback) => {
     const config = storage.getApiConfig()
     if (!config) {
       toast.error("请先设置 API 配置")
