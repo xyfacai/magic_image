@@ -122,3 +122,10 @@ pnpm dev
 ## 许可证
 
 MIT License
+
+---
+<div align="center">
+  <a href="https://github.com/HappyDongD/image_front" target="_blank" rel="noopener noreferrer">
+    访问 GitHub 项目主页
+  </a>
+</div>
