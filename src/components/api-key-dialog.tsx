@@ -40,7 +40,14 @@ export function ApiKeyDialog({ open, onOpenChange }: ApiKeyDialogProps) {
   const handleSave = () => {
     if (!validateInputs()) return
     
-    storage.setApiConfig(key.trim(), baseUrl.trim())
+    // 确保使用HTTPS协议
+    let secureUrl = baseUrl.trim()
+    if (secureUrl.startsWith('http:')) {
+      secureUrl = secureUrl.replace('http:', 'https:')
+      toast.info("为确保安全，已自动将HTTP协议转换为HTTPS")
+    }
+    
+    storage.setApiConfig(key.trim(), secureUrl)
     toast.success("保存成功")
     onOpenChange(false)
   }
@@ -66,6 +73,9 @@ export function ApiKeyDialog({ open, onOpenChange }: ApiKeyDialogProps) {
               {errors.baseUrl && (
                 <p className="text-sm text-red-500 mt-1">{errors.baseUrl}</p>
               )}
+              <p className="text-xs text-amber-500 mt-1">
+                注意：在HTTPS网站中使用HTTP接口可能会被浏览器阻止，建议使用HTTPS协议
+              </p>
             </div>
             <div className="relative">
               <Input

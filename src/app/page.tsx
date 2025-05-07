@@ -60,6 +60,14 @@ function HomeContent() {
       const decodedApiKey = decodeURIComponent(apiKey)
       storage.setApiConfig(decodedApiKey, decodedUrl)
     }
+
+    // 检查并修复存储的API URL，确保使用HTTPS
+    const storedConfig = storage.getApiConfig()
+    if (storedConfig && storedConfig.baseUrl && storedConfig.baseUrl.startsWith('http:')) {
+      const secureUrl = storedConfig.baseUrl.replace('http:', 'https:')
+      storage.setApiConfig(storedConfig.key, secureUrl)
+      console.log('API URL已自动升级到HTTPS:', secureUrl)
+    }
   }, [searchParams])
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
