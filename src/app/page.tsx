@@ -37,7 +37,7 @@ function HomeContent() {
   const [error, setError] = useState<string | null>(null)
   const [streamContent, setStreamContent] = useState<string>("")
   const [isImageToImage, setIsImageToImage] = useState(false)
-  const [sourceImage, setSourceImage] = useState<string | null>(null)
+  const [sourceImages, setSourceImages] = useState<string[]>([])
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>("1:1")
   const [size, setSize] = useState<ImageSize>("1024x1024")
   const [n, setN] = useState(1)
@@ -63,24 +63,36 @@ function HomeContent() {
   }, [searchParams])
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (file) {
-      if (file.size > 4 * 1024 * 1024) {
-        setError("图片大小不能超过4MB")
-        return
-      }
+    const files = event.target.files
+    if (files && files.length > 0) {
+      Array.from(files).forEach(file => {
+        if (file.size > 4 * 1024 * 1024) {
+          setError("图片大小不能超过4MB")
+          return
+        }
 
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        const base64 = e.target?.result as string
-        setSourceImage(base64)
-      }
-      reader.readAsDataURL(file)
+        // 检查文件类型
+        if (!['image/jpeg', 'image/png'].includes(file.type)) {
+          setError("只支持JPG和PNG格式的图片")
+          return
+        }
+
+        const reader = new FileReader()
+        reader.onload = (e) => {
+          const base64 = e.target?.result as string
+          setSourceImages(prev => [...prev, base64])
+        }
+        reader.readAsDataURL(file)
+      })
     }
   }
 
+  const handleRemoveImage = (index: number) => {
+    setSourceImages(prev => prev.filter((_, i) => i !== index))
+  }
+
   const handleGenerate = async () => {
-    if (isImageToImage && !sourceImage) {
+    if (isImageToImage && sourceImages.length === 0) {
       setError("请先上传或选择图片")
       return
     }
@@ -97,19 +109,27 @@ function HomeContent() {
 
     try {
       const isDalleModel = model === 'dall-e-3' || model === 'gpt-image-1'
-      const finalPrompt = isDalleModel ? prompt.trim() : `${prompt.trim()}\n图片生成比例为：${aspectRatio}`
+      
+      // 如果有多张源图片，将它们的信息添加到提示词中
+      let enhancedPrompt = prompt.trim();
+      if (sourceImages.length > 1) {
+        enhancedPrompt += `\n\n参考图片信息：上传了${sourceImages.length}张参考图片，第一张作为主要参考，其他图片作为额外参考。`;
+      }
+      
+      const finalPrompt = isDalleModel ? enhancedPrompt : `${enhancedPrompt}\n图片生成比例为：${aspectRatio}`
       
       if (isDalleModel) {
         if (isImageToImage) {
-          if (!sourceImage) {
+          if (sourceImages.length === 0) {
             throw new Error('请先上传图片')
           }
           
           try {
+            // 目前API仅支持使用第一张图片
             const response = await api.editDalleImage({
               prompt: finalPrompt,
               model,
-              sourceImage,
+              sourceImage: sourceImages[0],
               size,
               n,
               mask: maskImage || undefined,
@@ -172,7 +192,7 @@ function HomeContent() {
           {
             prompt: finalPrompt,
             model,
-            sourceImage: isImageToImage && sourceImage ? sourceImage : undefined,
+            sourceImage: isImageToImage && sourceImages.length > 0 ? sourceImages[0] : undefined,
             isImageToImage,
             aspectRatio
           },
@@ -218,7 +238,7 @@ function HomeContent() {
     setGeneratedImages([])
     setError(null)
     setStreamContent("")
-    setSourceImage(null)
+    setSourceImages([])
     setMaskImage(null)
     setAspectRatio("1:1")
     setSize("1024x1024")
@@ -237,7 +257,7 @@ function HomeContent() {
   const handleEditCurrentImage = () => {
     if (generatedImages[currentImageIndex]) {
       setIsImageToImage(true)
-      setSourceImage(generatedImages[currentImageIndex])
+      setSourceImages([generatedImages[currentImageIndex]])
     }
   }
 
@@ -319,20 +339,41 @@ function HomeContent() {
                       className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:border-primary/50 transition-colors"
                       onClick={() => fileInputRef.current?.click()}
                     >
-                      {sourceImage ? (
-                        <div className="relative aspect-square w-full">
-                          <Image
-                            src={sourceImage}
-                            alt="Source"
-                            fill
-                            className="object-contain rounded-lg"
-                          />
+                      {sourceImages.length > 0 ? (
+                        <div className="grid grid-cols-2 gap-2">
+                          {sourceImages.map((image, index) => (
+                            <div key={index} className="relative aspect-square w-full">
+                              <Image
+                                src={image}
+                                alt={`Source ${index + 1}`}
+                                fill
+                                className="object-contain rounded-lg"
+                              />
+                              <Button
+                                variant="destructive"
+                                size="icon"
+                                className="absolute -top-2 -right-2 h-6 w-6 rounded-full"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleRemoveImage(index);
+                                }}
+                              >
+                                ✕
+                              </Button>
+                            </div>
+                          ))}
+                          {sourceImages.length < 4 && (
+                            <div className="flex items-center justify-center aspect-square w-full border-2 border-dashed rounded-lg">
+                              <Upload className="h-8 w-8 text-gray-400" />
+                            </div>
+                          )}
                         </div>
                       ) : (
                         <div className="flex flex-col items-center gap-2 text-gray-500">
                           <Upload className="h-8 w-8" />
                           <p>点击上传图片或拖拽图片到这里</p>
-                          <p className="text-xs">支持JPG、PNG格式，最大4MB</p>
+                          <p className="text-xs">仅支持JPG、PNG格式，最大4MB</p>
+                          <p className="text-xs text-blue-500">可上传多张图片作为参考（最多4张）</p>
                         </div>
                       )}
                     </div>
@@ -342,17 +383,18 @@ function HomeContent() {
                       accept="image/jpeg,image/png"
                       className="hidden"
                       onChange={handleFileUpload}
+                      multiple
                     />
                   </div>
                 )}
 
-                {isImageToImage && sourceImage && (model === 'dall-e-3' || model === 'gpt-image-1') && (
+                {isImageToImage && sourceImages.length > 0 && (model === 'dall-e-3' || model === 'gpt-image-1') && (
                   <Button
                     variant="outline"
                     className="w-full"
                     onClick={() => {
                       setIsMaskEditorOpen(true)
-                      setSelectedImage(sourceImage)
+                      setSelectedImage(sourceImages[0])
                     }}
                   >
                     {maskImage ? "重新编辑区域" : "编辑图片区域"}
@@ -511,7 +553,7 @@ function HomeContent() {
                       variant="ghost"
                       onClick={() => {
                         setIsImageToImage(true)
-                        setSourceImage(generatedImages[currentImageIndex])
+                        setSourceImages([generatedImages[currentImageIndex]])
                       }}
                     >
                       <Edit className="h-5 w-5" />
@@ -592,7 +634,7 @@ function HomeContent() {
         onOpenChange={setShowHistoryDialog}
         onEditImage={(imageUrl) => {
           setIsImageToImage(true)
-          setSourceImage(imageUrl)
+          setSourceImages([imageUrl])
         }}
       />
 
