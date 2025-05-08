@@ -16,6 +16,9 @@ import { v4 as uuidv4 } from 'uuid'
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { MaskEditor } from "@/components/mask-editor"
 import { useSearchParams } from 'next/navigation'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+import rehypeHighlight from 'rehype-highlight'
 
 export default function Home() {
   return (
@@ -584,9 +587,39 @@ function HomeContent() {
                   ) : (
                     <div 
                       ref={contentRef}
-                      className="flex-1 overflow-y-auto whitespace-pre-wrap rounded-lg bg-gray-50 p-4 font-mono text-sm min-h-[200px]"
+                      className="flex-1 overflow-y-auto rounded-lg bg-gray-50 p-4 font-mono text-sm min-h-[200px] markdown-content"
                     >
-                      {streamContent || (
+                      {streamContent ? (
+                        <ReactMarkdown
+                          remarkPlugins={[remarkGfm]}
+                          rehypePlugins={[rehypeHighlight]}
+                          components={{
+                            // 自定义链接在新窗口打开
+                            a: ({ node, ...props }) => (
+                              <a target="_blank" rel="noopener noreferrer" {...props} />
+                            ),
+                            // 自定义代码块样式
+                            code: ({ node, className, children, ...props }: any) => {
+                              const match = /language-(\w+)/.exec(className || '')
+                              // 内联代码与代码块处理
+                              const isInline = !match && !className
+                              if (isInline) {
+                                return <code className={className} {...props}>{children}</code>
+                              }
+                              // 代码块
+                              return (
+                                <pre className={`${className || ''}`}>
+                                  <code className={match ? `language-${match[1]}` : ''} {...props}>
+                                    {children}
+                                  </code>
+                                </pre>
+                              )
+                            }
+                          }}
+                        >
+                          {streamContent}
+                        </ReactMarkdown>
+                      ) : (
                         <div className="text-gray-400 text-center">
                           {isGenerating ? "正在生成中..." : "等待生成..."}
                         </div>
