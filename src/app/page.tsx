@@ -647,15 +647,9 @@ function HomeContent() {
       />
 
       <footer className="w-full py-4 text-center text-sm text-gray-500">
-        <a 
-          href="https://github.com/HappyDongD/magic_image" 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="hover:text-primary transition-colors inline-flex items-center gap-2"
-        >
-          <Github className="h-4 w-4" />
-          访问 GitHub 项目主页
-        </a>
+        <p>
+          使用前请先设置令牌信息
+        </p>
       </footer>
 
       <Dialog open={showImageDialog} onOpenChange={setShowImageDialog}>
