@@ -7,7 +7,11 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue.svg)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-3.0-38B2AC.svg)](https://tailwindcss.com/)
 
-一个基于 Next.js 开发的 AI 绘画应用，支持多种 AI 模型，提供文生图和图生图功能。
+一个基于 Next.js 开发的 AI 绘画应用，具有以下主要功能：
+- 🎨 支持多种 AI 模型（Sora、DALL-E、GPT等）及自定义模型添加
+- 🖼️ 提供文生图和图生图功能，支持多图参考和区域编辑
+- 🔐 所有数据和API密钥本地存储，保障隐私安全
+- 💻 支持网页版及桌面应用打包，跨平台使用
 
 ## 在线体验
 
@@ -17,6 +21,7 @@
 
 <div align="center">
   <img src="./public/4.png" alt="应用截图4" width="800" style="margin-bottom: 20px"/>
+      <img src="./public/5.png" alt="应用截图4" width="800" style="margin-bottom: 20px"/>
   <img src="./public/0.png" alt="应用截图1" width="800" style="margin-bottom: 20px"/>
   <img src="./public/1.png" alt="应用截图2" width="800" style="margin-bottom: 20px"/>
   <img src="./public/2.png" alt="应用截图3" width="800" style="margin-bottom: 20px"/>
@@ -29,6 +34,7 @@
   - GPT 4o_Image 模型
   - GPT Image 1 模型
   - DALL-E 3 模型
+  - 🆕 自定义模型（支持添加私有模型）
 - ✍️ 文生图功能
   - 支持自定义提示词
   - 可选择图片比例
@@ -37,6 +43,7 @@
   - 支持图片编辑
   - 支持区域遮罩编辑
   - 支持图片质量调整
+  - 支持多图参考（同时上传多张图片）
 - 🔒 数据安全
   - 所有生成的图片和历史记录仅保存在本地浏览器中
   - 支持自定义 API 代理地址
@@ -44,6 +51,11 @@
 - 📱 UI设计
   - 现代化的用户界面
   - 流畅的交互体验
+  - Markdown 格式展示
+  - 代码高亮支持
+- 🖥️ 跨平台支持
+  - 支持打包为桌面应用（Windows、macOS、Linux）
+  - 支持离线使用（需要配置API接口）
 
 ## 技术栈
 
@@ -52,6 +64,7 @@
 - Tailwind CSS
 - shadcn/ui
 - React
+- Tauri (桌面应用打包)
 
 ## 本地开发
 
@@ -80,6 +93,42 @@ pnpm dev
 ```
 
 4. 访问 [http://localhost:3000](http://localhost:3000)
+
+## 桌面应用打包
+
+本项目使用 Tauri 进行桌面应用打包，支持 Windows、macOS 和 Linux 系统。
+
+### 环境准备
+
+在打包桌面应用前，需要安装以下依赖：
+
+1. **安装 Rust**：
+   - 访问 [https://www.rust-lang.org/tools/install](https://www.rust-lang.org/tools/install)
+   - 按照指引安装 Rust 和 Cargo
+
+2. **系统依赖**：
+   - **Windows**: 安装 [Visual Studio C++ 构建工具](https://visualstudio.microsoft.com/visual-cpp-build-tools/)
+   - **macOS**: 安装 Xcode 命令行工具 (`xcode-select --install`)
+   - **Linux**: 安装相关依赖，详见 [Tauri 文档](https://tauri.app/v1/guides/getting-started/prerequisites)
+
+### 开发模式
+
+```bash
+# 安装 Tauri CLI
+npm install -D @tauri-apps/cli
+
+# 启动桌面应用开发模式
+npm run tauri:dev
+```
+
+### 构建桌面应用
+
+```bash
+# 构建桌面应用安装包
+npm run desktop
+```
+
+构建完成后，可以在 `src-tauri/target/release/bundle` 目录找到对应系统的安装包。
 
 ## Vercel 部署
 
@@ -112,16 +161,27 @@ pnpm dev
    - 图生图：上传图片进行编辑
 
 3. 设置生成参数
-   - 选择 AI 模型
+   - 选择 AI 模型（内置模型或自定义模型）
    - 设置图片比例
    - 调整图片质量（图生图模式）
 
-4. 生成图片
+4. 自定义模型管理
+   - 点击模型选择框旁边的设置图标
+   - 添加新模型：输入模型名称、模型值和选择模型类型
+   - 编辑模型：点击已有模型的编辑按钮
+   - 删除模型：点击已有模型的删除按钮
+   - 选择模型：点击模型的加号按钮立即选择使用该模型
+
+5. 模型类型说明
+   - DALL-E 格式：使用图像生成接口（/v1/images/generations）
+   - OpenAI 格式：使用聊天接口（/v1/chat/completions）
+
+6. 生成图片
    - 输入提示词
    - 点击"生成图片"按钮
    - 等待生成完成
 
-5. 图片管理
+7. 图片管理
    - 查看历史记录
    - 下载生成的图片
    - 编辑已有图片
@@ -132,6 +192,7 @@ pnpm dev
 - 使用隐私模式或更换设备会导致数据丢失
 - 请及时下载并备份重要图片
 - API 配置将安全地存储在您的浏览器中，不会上传到服务器
+- HTTPS 网站加载 HTTP 资源会被浏览器阻止，应用会自动将 HTTP 接口转换为 HTTPS
 
 ## 贡献指南
 

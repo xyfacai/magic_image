@@ -7,7 +7,11 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue.svg)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-3.0-38B2AC.svg)](https://tailwindcss.com/)
 
-An AI painting application developed based on Next.js, supporting multiple AI models and providing text-to-image and image-to-image features.
+An AI painting application developed with Next.js, featuring:
+- 🎨 Support for multiple AI models (Sora, DALL-E, GPT, etc.) and custom model addition
+- 🖼️ Text-to-image and image-to-image capabilities with multi-image reference and region editing
+- 🔐 Local storage of all data and API keys for privacy protection
+- 💻 Available as web app and desktop application for cross-platform use
 
 ## Online Demo
 
@@ -29,6 +33,7 @@ Visit: [https://image-front-eight.vercel.app/](https://image-front-eight.vercel.
   - GPT 4o_Image Model
   - GPT Image 1 Model
   - DALL-E 3 Model
+  - 🆕 Custom Models (support for private models)
 - ✍️ Text-to-Image
   - Custom prompt support
   - Aspect ratio selection
@@ -37,6 +42,7 @@ Visit: [https://image-front-eight.vercel.app/](https://image-front-eight.vercel.
   - Image editing
   - Region mask editing
   - Image quality adjustment
+  - Multi-image reference (upload multiple images at once)
 - 🔒 Data Security
   - All generated images and history are stored locally in the browser
   - Custom API proxy address support
@@ -44,6 +50,11 @@ Visit: [https://image-front-eight.vercel.app/](https://image-front-eight.vercel.
 - 📱 UI Design
   - Modern user interface
   - Smooth interaction experience
+  - Markdown format display
+  - Code highlighting support
+- 🖥️ Cross-platform Support
+  - Desktop application packaging (Windows, macOS, Linux)
+  - Offline usage support (API configuration required)
 
 ## Tech Stack
 
@@ -52,6 +63,7 @@ Visit: [https://image-front-eight.vercel.app/](https://image-front-eight.vercel.
 - Tailwind CSS
 - shadcn/ui
 - React
+- Tauri (desktop application packaging)
 
 ## Local Development
 
@@ -80,6 +92,42 @@ pnpm dev
 ```
 
 4. Visit [http://localhost:3000](http://localhost:3000)
+
+## Desktop Application Packaging
+
+This project uses Tauri for desktop application packaging, supporting Windows, macOS, and Linux systems.
+
+### Environment Setup
+
+Before packaging the desktop application, you need to install the following dependencies:
+
+1. **Install Rust**:
+   - Visit [https://www.rust-lang.org/tools/install](https://www.rust-lang.org/tools/install)
+   - Follow the guide to install Rust and Cargo
+
+2. **System Dependencies**:
+   - **Windows**: Install [Visual Studio C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/)
+   - **macOS**: Install Xcode Command Line Tools (`xcode-select --install`)
+   - **Linux**: Install related dependencies, see [Tauri Documentation](https://tauri.app/v1/guides/getting-started/prerequisites)
+
+### Development Mode
+
+```bash
+# Install Tauri CLI
+npm install -D @tauri-apps/cli
+
+# Start desktop application development mode
+npm run tauri:dev
+```
+
+### Build Desktop Application
+
+```bash
+# Build desktop application installer
+npm run desktop
+```
+
+After building, you can find the installer for your system in the `src-tauri/target/release/bundle` directory.
 
 ## Vercel Deployment
 
@@ -112,16 +160,27 @@ pnpm dev
    - Image-to-Image: Upload and edit images
 
 3. Set generation parameters
-   - Select AI model
+   - Select AI model (built-in or custom models)
    - Set image aspect ratio
    - Adjust image quality (Image-to-Image mode)
 
-4. Generate images
+4. Custom Model Management
+   - Click the settings icon next to the model selection box
+   - Add a new model: Enter model name, model value, and select model type
+   - Edit model: Click the edit button on an existing model
+   - Delete model: Click the delete button on an existing model
+   - Select model: Click the plus button on a model to immediately use that model
+
+5. Model Type Explanation
+   - DALL-E format: Uses the image generation API endpoint (/v1/images/generations)
+   - OpenAI format: Uses the chat API endpoint (/v1/chat/completions)
+
+6. Generate images
    - Enter prompts
    - Click "Generate Image" button
    - Wait for generation to complete
 
-5. Image management
+7. Image management
    - View history
    - Download generated images
    - Edit existing images
@@ -132,6 +191,7 @@ pnpm dev
 - Using private mode or changing devices will result in data loss
 - Please download and backup important images promptly
 - API configuration is securely stored in your browser and will not be uploaded to the server
+- HTTPS websites loading HTTP resources will be blocked by browsers; the application automatically converts HTTP APIs to HTTPS
 
 ## Contributing
 
