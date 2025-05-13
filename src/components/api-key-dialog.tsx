@@ -42,7 +42,11 @@ export function ApiKeyDialog({ open, onOpenChange }: ApiKeyDialogProps) {
     
     // 确保使用HTTPS协议
     let secureUrl = baseUrl.trim()
-    if (secureUrl.startsWith('http:')) {
+    
+    // 检查URL是否以#结尾（特殊处理标记）
+    const endsWithHash = secureUrl.endsWith('#')
+    
+    if (secureUrl.startsWith('http:') && !endsWithHash) {
       secureUrl = secureUrl.replace('http:', 'https:')
       toast.info("为确保安全，已自动将HTTP协议转换为HTTPS")
     }
@@ -62,7 +66,7 @@ export function ApiKeyDialog({ open, onOpenChange }: ApiKeyDialogProps) {
           <div className="space-y-2">
             <div>
               <Input
-                placeholder="请输入API基础地址，URL请不要以/结尾，默认添加/v1/chat/completions"
+                placeholder="请输入API基础地址，如需使用完整URL，请在末尾添加#符号"
                 value={baseUrl}
                 onChange={(e) => {
                   setBaseUrl(e.target.value)
@@ -73,9 +77,14 @@ export function ApiKeyDialog({ open, onOpenChange }: ApiKeyDialogProps) {
               {errors.baseUrl && (
                 <p className="text-sm text-red-500 mt-1">{errors.baseUrl}</p>
               )}
-              <p className="text-xs text-amber-500 mt-1">
-                注意：在HTTPS网站中使用HTTP接口可能会被浏览器阻止，建议使用HTTPS协议
-              </p>
+              <div className="flex flex-col gap-1 mt-1">
+                <p className="text-xs text-amber-500">
+                  注意：在HTTPS网站中使用HTTP接口可能会被浏览器阻止，建议使用HTTPS协议
+                </p>
+                <p className="text-xs text-gray-500">
+                  默认添加API路径（如/v1/chat/completions），若URL以#结尾则使用完整输入地址
+                </p>
+              </div>
             </div>
             <div className="relative">
               <Input
@@ -100,7 +109,7 @@ export function ApiKeyDialog({ open, onOpenChange }: ApiKeyDialogProps) {
                 <p className="text-sm text-red-500 mt-1">{errors.key}</p>
               )}
             </div>
-            <p className="text-sm text-gray-500">
+            <p className="text-xs text-gray-500">
               API 配置将安全地存储在您的浏览器中，不会上传到服务器
             </p>
           </div>

@@ -10,7 +10,7 @@ import { ApiKeyDialog } from "@/components/api-key-dialog"
 import { HistoryDialog } from "@/components/history-dialog"
 import { useState, useRef, useEffect, Suspense } from "react"
 import { api } from "@/lib/api"
-import { GenerationModel, AspectRatio, ImageSize } from "@/types"
+import { GenerationModel, AspectRatio, ImageSize, DalleImageData, ModelType } from "@/types"
 import { storage } from "@/lib/storage"
 import { v4 as uuidv4 } from 'uuid'
 import { Dialog, DialogContent } from "@/components/ui/dialog"
@@ -19,6 +19,8 @@ import { useSearchParams } from 'next/navigation'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeHighlight from 'rehype-highlight'
+import { CustomModelDialog } from "@/components/custom-model-dialog"
+import { toast } from "sonner"
 
 export default function Home() {
   return (
@@ -31,8 +33,10 @@ export default function Home() {
 function HomeContent() {
   const [showApiKeyDialog, setShowApiKeyDialog] = useState(false)
   const [showHistoryDialog, setShowHistoryDialog] = useState(false)
+  const [showCustomModelDialog, setShowCustomModelDialog] = useState(false)
   const [prompt, setPrompt] = useState("")
   const [model, setModel] = useState<GenerationModel>("sora_image")
+  const [modelType, setModelType] = useState<ModelType>(ModelType.OPENAI)
   const [isGenerating, setIsGenerating] = useState(false)
   const [generatedImages, setGeneratedImages] = useState<string[]>([])
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
@@ -102,6 +106,16 @@ function HomeContent() {
     setSourceImages(prev => prev.filter((_, i) => i !== index))
   }
 
+  const isBase64Image = (url: string) => {
+    return url.startsWith('data:image');
+  }
+
+  const handleSelectCustomModel = (modelValue: string, type: ModelType) => {
+    setModel(modelValue)
+    setModelType(type)
+    toast.success("已选择自定义模型")
+  }
+
   const handleGenerate = async () => {
     if (isImageToImage && sourceImages.length === 0) {
       setError("请先上传或选择图片")
@@ -119,7 +133,7 @@ function HomeContent() {
     setCurrentImageIndex(0)
 
     try {
-      const isDalleModel = model === 'dall-e-3' || model === 'gpt-image-1'
+      const isDalleModel = model === 'dall-e-3' || model === 'gpt-image-1' || modelType === ModelType.DALLE
       
       // 如果有多张源图片，将它们的信息添加到提示词中
       let enhancedPrompt = prompt.trim();
@@ -140,6 +154,7 @@ function HomeContent() {
             const response = await api.editDalleImage({
               prompt: finalPrompt,
               model,
+              modelType,
               sourceImage: sourceImages[0],
               size,
               n,
@@ -147,7 +162,16 @@ function HomeContent() {
               quality
             })
             
-            const imageUrls = response.data.map(item => item.url)
+            const imageUrls = response.data.map(item => {
+              // 处理DALL-E返回的URL或base64图片
+              const imageUrl = item.url || item.b64_json;
+              // 如果是base64格式，添加data:image前缀(如果还没有)
+              if (imageUrl && item.b64_json && !isBase64Image(imageUrl)) {
+                return `data:image/png;base64,${imageUrl}`;
+              }
+              return imageUrl || ''; // 添加空字符串作为默认值
+            }).filter(url => url !== ''); // 过滤掉空链接
+            
             setGeneratedImages(imageUrls)
             
             if (imageUrls.length > 0) {
@@ -177,7 +201,16 @@ function HomeContent() {
               quality
             })
             
-            const imageUrls = response.data.map(item => item.url)
+            const imageUrls = response.data.map(item => {
+              // 处理DALL-E返回的URL或base64图片
+              const imageUrl = item.url || item.b64_json;
+              // 如果是base64格式，添加data:image前缀(如果还没有)
+              if (imageUrl && item.b64_json && !isBase64Image(imageUrl)) {
+                return `data:image/png;base64,${imageUrl}`;
+              }
+              return imageUrl || ''; // 添加空字符串作为默认值
+            }).filter(url => url !== ''); // 过滤掉空链接
+            
             setGeneratedImages(imageUrls)
             
             if (imageUrls.length > 0) {
@@ -203,6 +236,7 @@ function HomeContent() {
           {
             prompt: finalPrompt,
             model,
+            modelType,
             sourceImage: isImageToImage && sourceImages.length > 0 ? sourceImages[0] : undefined,
             isImageToImage,
             aspectRatio
@@ -271,6 +305,25 @@ function HomeContent() {
       setSourceImages([generatedImages[currentImageIndex]])
     }
   }
+
+  const handleDownload = () => {
+    if (generatedImages[currentImageIndex]) {
+      const imageUrl = generatedImages[currentImageIndex];
+      const link = document.createElement('a');
+      link.href = imageUrl;
+      
+      // 为base64图片设置合适的文件名
+      if (isBase64Image(imageUrl)) {
+        link.download = `generated-image-${Date.now()}.png`;
+      } else {
+        link.download = 'generated-image.png';
+      }
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
 
   return (
     <main className="min-h-screen bg-background">
@@ -399,7 +452,7 @@ function HomeContent() {
                   </div>
                 )}
 
-                {isImageToImage && sourceImages.length > 0 && (model === 'dall-e-3' || model === 'gpt-image-1') && (
+                {isImageToImage && sourceImages.length > 0 && (model === 'dall-e-3' || model === 'gpt-image-1' || modelType === ModelType.DALLE) && (
                   <Button
                     variant="outline"
                     className="w-full"
@@ -424,21 +477,60 @@ function HomeContent() {
 
                 <div className="space-y-2">
                   <h3 className="font-medium">模型选择</h3>
-                  <Select value={model} onValueChange={(value: GenerationModel) => setModel(value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="选择生成模型" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="sora_image">GPT Sora_Image 模型</SelectItem>
-                      <SelectItem value="gpt_4o_image">GPT 4o_Image 模型</SelectItem>
-                      <SelectItem value="gpt-image-1">GPT Image 1 模型</SelectItem>
-                      <SelectItem value="dall-e-3">DALL-E 3 模型</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div className="flex gap-2 mb-2">
+                    <Select 
+                      value={model} 
+                      onValueChange={(value: GenerationModel) => {
+                        setModel(value)
+                        // 为内置模型设置对应的模型类型
+                        if (value === 'dall-e-3' || value === 'gpt-image-1') {
+                          setModelType(ModelType.DALLE)
+                        } else {
+                          setModelType(ModelType.OPENAI)
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="flex-1">
+                        <SelectValue placeholder="选择生成模型" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="sora_image">GPT Sora_Image 模型</SelectItem>
+                        <SelectItem value="gpt_4o_image">GPT 4o_Image 模型</SelectItem>
+                        <SelectItem value="gpt-image-1">GPT Image 1 模型</SelectItem>
+                        <SelectItem value="dall-e-3">DALL-E 3 模型</SelectItem>
+                        
+                        {/* 显示自定义模型 */}
+                        {storage.getCustomModels().length > 0 && (
+                          <>
+                            <SelectItem value="divider" disabled>
+                              ──── 自定义模型 ────
+                            </SelectItem>
+                            {storage.getCustomModels().map(customModel => (
+                              <SelectItem 
+                                key={customModel.id} 
+                                value={customModel.value}
+                              >
+                                {customModel.name} ({customModel.type === ModelType.DALLE ? "DALL-E" : "OpenAI"})
+                              </SelectItem>
+                            ))}
+                          </>
+                        )}
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setShowCustomModelDialog(true)}
+                      title="管理自定义模型"
+                    >
+                      <Settings className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <p className="text-xs text-gray-500">模型类型: {modelType === ModelType.DALLE ? 'DALL-E格式' : 'OpenAI格式'}</p>
                   <p className="text-xs text-gray-500">选择不同的AI模型可能会产生不同风格的图像结果</p>
                 </div>
 
-                {(model === 'dall-e-3' || model === 'gpt-image-1') && (
+                {(model === 'dall-e-3' || model === 'gpt-image-1' || modelType === ModelType.DALLE) && (
                   <>
                     <div className="space-y-2">
                       <h3 className="font-medium">图片尺寸</h3>
@@ -502,7 +594,7 @@ function HomeContent() {
                   </>
                 )}
 
-                {!(model === 'dall-e-3' || model === 'gpt-image-1') && (
+                {!(model === 'dall-e-3' || model === 'gpt-image-1' || modelType === ModelType.DALLE) && (
                   <div className="space-y-2">
                     <h3 className="font-medium">图片比例</h3>
                     <Select value={aspectRatio} onValueChange={(value: AspectRatio) => setAspectRatio(value)}>
@@ -546,16 +638,7 @@ function HomeContent() {
                     <Button 
                       size="icon" 
                       variant="ghost"
-                      onClick={() => {
-                        if (generatedImages[currentImageIndex]) {
-                          const link = document.createElement('a')
-                          link.href = generatedImages[currentImageIndex]
-                          link.download = 'generated-image.png'
-                          document.body.appendChild(link)
-                          link.click()
-                          document.body.removeChild(link)
-                        }
-                      }}
+                      onClick={handleDownload}
                     >
                       <Download className="h-5 w-5" />
                     </Button>
@@ -580,7 +663,7 @@ function HomeContent() {
                 </div>
               ) : (
                 <div className="w-full h-full flex flex-col gap-4">
-                  {(model === 'dall-e-3' || model === 'gpt-image-1') ? (
+                  {(model === 'dall-e-3' || model === 'gpt-image-1' || modelType === ModelType.DALLE) ? (
                     <div className="text-center text-gray-400">
                       {isGenerating ? "正在生成中..." : generatedImages.length === 0 ? "等待生成..." : null}
                     </div>
@@ -677,6 +760,11 @@ function HomeContent() {
           setIsImageToImage(true)
           setSourceImages([imageUrl])
         }}
+      />
+      <CustomModelDialog
+        open={showCustomModelDialog}
+        onOpenChange={setShowCustomModelDialog}
+        onSelectModel={handleSelectCustomModel}
       />
 
       <footer className="w-full py-4 text-center text-sm text-gray-500">

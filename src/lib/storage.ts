@@ -1,8 +1,9 @@
-import { ApiConfig, GeneratedImage } from "@/types"
+import { ApiConfig, GeneratedImage, CustomModel } from "@/types"
 
 const STORAGE_KEYS = {
   API_CONFIG: 'ai-drawing-api-config',
-  HISTORY: 'ai-drawing-history'
+  HISTORY: 'ai-drawing-history',
+  CUSTOM_MODELS: 'ai-drawing-custom-models'
 }
 
 export const storage = {
@@ -52,5 +53,36 @@ export const storage = {
     const history = storage.getHistory()
     const filtered = history.filter(img => img.id !== id)
     localStorage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify(filtered))
+  },
+
+  // 自定义模型相关操作
+  getCustomModels: (): CustomModel[] => {
+    if (typeof window === 'undefined') return []
+    const data = localStorage.getItem(STORAGE_KEYS.CUSTOM_MODELS)
+    return data ? JSON.parse(data) : []
+  },
+
+  addCustomModel: (model: CustomModel): void => {
+    if (typeof window === 'undefined') return
+    const models = storage.getCustomModels()
+    models.push(model)
+    localStorage.setItem(STORAGE_KEYS.CUSTOM_MODELS, JSON.stringify(models))
+  },
+
+  removeCustomModel: (id: string): void => {
+    if (typeof window === 'undefined') return
+    const models = storage.getCustomModels()
+    const filtered = models.filter(model => model.id !== id)
+    localStorage.setItem(STORAGE_KEYS.CUSTOM_MODELS, JSON.stringify(filtered))
+  },
+
+  updateCustomModel: (id: string, updated: Partial<CustomModel>): void => {
+    if (typeof window === 'undefined') return
+    const models = storage.getCustomModels()
+    const index = models.findIndex(model => model.id === id)
+    if (index !== -1) {
+      models[index] = { ...models[index], ...updated }
+      localStorage.setItem(STORAGE_KEYS.CUSTOM_MODELS, JSON.stringify(models))
+    }
   }
 } 
