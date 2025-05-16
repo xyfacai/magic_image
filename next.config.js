@@ -1,7 +1,9 @@
- /** @type {import('next').NextConfig} */
+/** @type {import('next').NextConfig} */
 const nextConfig = {
-    output: 'standalone',
-    // ... 其他配置
+  output: 'export',
+  images: {
+    unoptimized: true,
   }
-  
-  module.exports = nextConfig
+};
+
+module.exports = nextConfig; 

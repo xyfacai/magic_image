@@ -1,11 +1,12 @@
 import { storage } from "./storage"
-import { GenerationModel, AspectRatio, ImageSize } from "@/types"
+import { GenerationModel, AspectRatio, ImageSize, DalleImageData, ModelType } from "@/types"
 import { toast } from "sonner"
 import { AlertCircle } from "lucide-react"
 
 export interface GenerateImageRequest {
   prompt: string
   model: GenerationModel
+  modelType?: ModelType
   sourceImage?: string
   isImageToImage?: boolean
   aspectRatio?: AspectRatio
@@ -13,6 +14,7 @@ export interface GenerateImageRequest {
   n?: number
   quality?: 'high' | 'medium' | 'low' | 'hd' | 'standard'| 'auto'
   mask?: string
+  sourceImages?: string[]
 }
 
 export interface StreamCallback {
@@ -22,9 +24,7 @@ export interface StreamCallback {
 }
 
 export interface DalleImageResponse {
-  data: Array<{
-    url: string
-  }>
+  data: Array<DalleImageData>
   created: number
 }
 
@@ -33,6 +33,16 @@ const showErrorToast = (message: string) => {
     style: { color: '#EF4444' },  // text-red-500
     duration: 5000
   })
+}
+
+// 辅助函数，构建请求URL
+const buildRequestUrl = (baseUrl: string, endpoint: string): string => {
+  // 如果URL以#结尾，则使用完整的baseUrl，不添加后缀
+  if (baseUrl.endsWith('#')) {
+    return baseUrl.slice(0, -1); // 移除#号
+  }
+  // 否则按常规方式拼接endpoint
+  return `${baseUrl}${endpoint}`;
 }
 
 export const api = {
@@ -48,7 +58,15 @@ export const api = {
       throw new Error('API 配置不完整')
     }
 
-    const response = await fetch(`${config.baseUrl}/v1/images/generations`, {
+    // 根据模型类型构建不同的请求URL
+    const modelType = request.modelType || ModelType.DALLE
+    const endpoint = modelType === ModelType.DALLE 
+      ? '/v1/images/generations' 
+      : '/v1/images/generations'
+
+    const requestUrl = buildRequestUrl(config.baseUrl, endpoint);
+
+    const response = await fetch(requestUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -93,6 +111,12 @@ export const api = {
     }
 
     try {
+      // 根据模型类型构建不同的请求URL
+      const modelType = request.modelType || ModelType.DALLE
+      const endpoint = modelType === ModelType.DALLE 
+        ? '/v1/images/edits' 
+        : '/v1/images/edits'
+
       // 创建 FormData
       const formData = new FormData()
       formData.append('prompt', request.prompt)
@@ -121,7 +145,9 @@ export const api = {
       if (request.n) formData.append('n', request.n.toString())
       if (request.quality) formData.append('quality', request.quality)
 
-      const response = await fetch(`${config.baseUrl}/v1/images/edits`, {
+      const requestUrl = buildRequestUrl(config.baseUrl, endpoint);
+
+      const response = await fetch(requestUrl, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${config.key}`
@@ -166,6 +192,7 @@ export const api = {
       return
     }
 
+    // 多图片支持：修改消息构建逻辑
     const messages = request.isImageToImage ? [
       {
         role: 'user',
@@ -174,12 +201,17 @@ export const api = {
             type: 'text',
             text: request.prompt
           },
-          {
-            type: 'image_url',
-            image_url: {
-              url: request.sourceImage
-            }
-          }
+          // 如果有sourceImages数组，使用所有图片
+          ...(Array.isArray(request.sourceImages) ? 
+            request.sourceImages.map(imgUrl => ({
+              type: 'image_url',
+              image_url: { url: imgUrl }
+            })) : 
+            // 兼容旧代码，如果只有单张图片
+            request.sourceImage ? [{
+              type: 'image_url',
+              image_url: { url: request.sourceImage }
+            }] : [])
         ]
       }
     ] : [
@@ -189,17 +221,37 @@ export const api = {
       }
     ]
 
-    const response = await fetch(`${config.baseUrl}/v1/chat/completions`, {
+    // 根据模型类型构建不同的请求URL
+    const modelType = request.modelType || ModelType.OPENAI
+    const endpoint = modelType === ModelType.DALLE 
+      ? '/v1/images/generations' 
+      : '/v1/chat/completions'
+
+    // 根据模型类型构建不同的请求体
+    const requestBody = modelType === ModelType.DALLE 
+      ? {
+          model: request.model,
+          prompt: request.prompt,
+          size: request.aspectRatio === '1:1' ? '1024x1024' : 
+                request.aspectRatio === '16:9' ? '1792x1024' : 
+                '1024x1792',
+          n: 1
+        }
+      : {
+          model: request.model,
+          messages,
+          stream: true
+        }
+
+    const requestUrl = buildRequestUrl(config.baseUrl, endpoint);
+
+    const response = await fetch(requestUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${config.key}`
       },
-      body: JSON.stringify({
-        model: request.model,
-        messages,
-        stream: true
-      })
+      body: JSON.stringify(requestBody)
     })
 
     if (!response.ok) {
