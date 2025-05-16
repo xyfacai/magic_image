@@ -43,6 +43,7 @@ export interface GenerateImageRequest {
   model: GenerationModel
   modelType?: ModelType
   sourceImage?: string
+  sourceImages?: string[]
   isImageToImage?: boolean
   aspectRatio?: AspectRatio
   size?: ImageSize
