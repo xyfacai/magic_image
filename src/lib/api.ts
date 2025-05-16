@@ -14,6 +14,7 @@ export interface GenerateImageRequest {
   n?: number
   quality?: 'high' | 'medium' | 'low' | 'hd' | 'standard'| 'auto'
   mask?: string
+  sourceImages?: string[]
 }
 
 export interface StreamCallback {
@@ -191,6 +192,7 @@ export const api = {
       return
     }
 
+    // 多图片支持：修改消息构建逻辑
     const messages = request.isImageToImage ? [
       {
         role: 'user',
@@ -199,12 +201,17 @@ export const api = {
             type: 'text',
             text: request.prompt
           },
-          {
-            type: 'image_url',
-            image_url: {
-              url: request.sourceImage
-            }
-          }
+          // 如果有sourceImages数组，使用所有图片
+          ...(Array.isArray(request.sourceImages) ? 
+            request.sourceImages.map(imgUrl => ({
+              type: 'image_url',
+              image_url: { url: imgUrl }
+            })) : 
+            // 兼容旧代码，如果只有单张图片
+            request.sourceImage ? [{
+              type: 'image_url',
+              image_url: { url: request.sourceImage }
+            }] : [])
         ]
       }
     ] : [

@@ -104,6 +104,10 @@ function HomeContent() {
 
   const handleRemoveImage = (index: number) => {
     setSourceImages(prev => prev.filter((_, i) => i !== index))
+    // 重置文件输入框的值，确保相同的文件可以再次上传
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
   }
 
   const isBase64Image = (url: string) => {
@@ -150,7 +154,8 @@ function HomeContent() {
           }
           
           try {
-            // 目前API仅支持使用第一张图片
+            // DALL-E API仅支持使用第一张图片进行编辑
+            // 注意: 对于generateStreamImage方法，我们已添加对多图片的支持
             const response = await api.editDalleImage({
               prompt: finalPrompt,
               model,
@@ -238,6 +243,7 @@ function HomeContent() {
             model,
             modelType,
             sourceImage: isImageToImage && sourceImages.length > 0 ? sourceImages[0] : undefined,
+            sourceImages: isImageToImage ? sourceImages : undefined,
             isImageToImage,
             aspectRatio
           },
