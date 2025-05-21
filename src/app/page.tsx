@@ -493,7 +493,7 @@ function HomeContent() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="sora_image">GPT Sora_Image 模型</SelectItem>
-                        <SelectItem value="gpt_4o_image">GPT 4o_Image 模型</SelectItem>
+                        <SelectItem value="gpt-4o-image">GPT 4o-Image 模型</SelectItem>
                         <SelectItem value="gpt-image-1">GPT Image 1 模型</SelectItem>
                         <SelectItem value="dall-e-3">DALL-E 3 模型</SelectItem>
                         
