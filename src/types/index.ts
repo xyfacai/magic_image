@@ -34,7 +34,9 @@ export interface CustomModel {
   createdAt: string
 }
 
-export type GenerationModel = 'sora_image' | 'gpt-4o-image' | 'gpt-image-1' | 'dall-e-3' | string
+export type GenerationModel = 'sora_image' | 'gpt-4o-image' | 'gpt-image-1' | 'dall-e-3' | 
+  'flux-kontext-pro' | 'flux-kontext-max' | 'flux-kontext-dev' | 'qwen-image-edit' | 
+  'qwen-image' | 'flux-dev' | 'flux-pro' | 'flux-1.1-pro' | 'flux-pro-1.1-ultra' | string
 export type AspectRatio = '1:1' | '16:9' | '9:16'
 export type ImageSize = '1024x1024' | '1536x1024' | '1024x1536' | 'auto' | '1792x1024'
 

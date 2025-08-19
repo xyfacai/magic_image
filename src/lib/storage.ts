@@ -1,4 +1,4 @@
-import { ApiConfig, GeneratedImage, CustomModel } from "@/types"
+import { ApiConfig, GeneratedImage, CustomModel, ModelType } from "@/types"
 
 const STORAGE_KEYS = {
   API_CONFIG: 'ai-drawing-api-config',
@@ -59,7 +59,79 @@ export const storage = {
   getCustomModels: (): CustomModel[] => {
     if (typeof window === 'undefined') return []
     const data = localStorage.getItem(STORAGE_KEYS.CUSTOM_MODELS)
-    return data ? JSON.parse(data) : []
+
+    let defaultModels: CustomModel[] = [
+      {
+        id: 'flux-kontext-pro',
+        name: 'flux-kontext-pro',
+        value: 'flux-kontext-pro',
+        type: ModelType.DALLE,
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: 'flux-kontext-max',
+        name: 'flux-kontext-max',
+        value: 'flux-kontext-max',
+        type: ModelType.DALLE,
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: 'flux-kontext-dev',
+        name: 'flux-kontext-dev',
+        value: 'flux-kontext-dev',
+        type: ModelType.DALLE,
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: 'qwen-image-edit',
+        name: 'qwen-image-edit',
+        value: 'qwen-image-edit',
+        type: ModelType.DALLE,
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: 'qwen-image',
+        name: 'qwen-image',
+        value: 'qwen-image',
+        type: ModelType.DALLE,
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: 'flux-dev',
+        name: 'flux-dev',
+        value: 'flux-dev',
+        type: ModelType.DALLE,
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: 'flux-pro',
+        name: 'flux-pro',
+        value: 'flux-pro',
+        type: ModelType.DALLE,
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: 'flux-1.1-pro',
+        name: 'flux-1.1-pro',
+        value: 'flux-1.1-pro',
+        type: ModelType.DALLE,
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: 'flux-pro-1.1-ultra',
+        name: 'flux-pro-1.1-ultra',
+        value: 'flux-pro-1.1-ultra',
+        type: ModelType.DALLE,
+        createdAt: new Date().toISOString()
+      }
+    ]
+
+    if (!data) {
+      return defaultModels
+    }
+    const parsedData = JSON.parse(data)
+    parsedData.push(...defaultModels)
+    return parsedData
   },
 
   addCustomModel: (model: CustomModel): void => {
